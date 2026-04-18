@@ -14,17 +14,12 @@ import plotly.graph_objects as go
 
 st.set_page_config(
     page_title="Supply Chain Intelligence",
-    page_icon="🚚",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# CSS
-# ═══════════════════════════════════════════════════════════════════════════════
 st.markdown("""
 <style>
-/* ---------- base ---------- */
 html, body, [data-testid="stAppViewContainer"] {
     background-color: #0a0d14;
     color: #e2e8f0;
@@ -32,7 +27,6 @@ html, body, [data-testid="stAppViewContainer"] {
 }
 [data-testid="stHeader"] { background: transparent; }
 
-/* ---------- sidebar — always visible, fixed width ---------- */
 [data-testid="stSidebar"] {
     background-color: #111827 !important;
     border-right: 1px solid #1e293b !important;
@@ -46,7 +40,6 @@ html, body, [data-testid="stAppViewContainer"] {
 /* keep sidebar toggle arrow visible */
 [data-testid="collapsedControl"] { display: none !important; }
 
-/* ---------- metric cards ---------- */
 [data-testid="stMetric"] {
     background: #161b27;
     border: 1px solid #1e293b;
@@ -65,7 +58,6 @@ html, body, [data-testid="stAppViewContainer"] {
     font-weight: 700 !important;
 }
 
-/* ---------- tabs ---------- */
 .stTabs [data-baseweb="tab-list"] {
     background: #161b27; border-radius: 8px; padding: 4px; gap: 4px;
 }
@@ -74,7 +66,6 @@ html, body, [data-testid="stAppViewContainer"] {
 }
 .stTabs [aria-selected="true"] { background: #1e40af !important; color: #fff !important; }
 
-/* ---------- run button ---------- */
 .stButton > button {
     background: linear-gradient(135deg, #1e40af, #2563eb);
     color: #fff; border: none; border-radius: 8px;
@@ -88,7 +79,6 @@ html, body, [data-testid="stAppViewContainer"] {
     box-shadow: 0 4px 16px rgba(37,99,235,0.5);
 }
 
-/* ---------- section titles ---------- */
 .section-title {
     font-size: 11px; font-weight: 700; color: #475569;
     text-transform: uppercase; letter-spacing: 0.10em;
@@ -96,7 +86,6 @@ html, body, [data-testid="stAppViewContainer"] {
     border-bottom: 1px solid #1e293b;
 }
 
-/* ---------- cards ---------- */
 .card {
     background: #161b27; border: 1px solid #1e293b;
     border-radius: 8px; padding: 14px 18px; margin-bottom: 10px;
@@ -107,13 +96,11 @@ html, body, [data-testid="stAppViewContainer"] {
 .card.ok       { border-left: 4px solid #10b981; }
 .card.info     { border-left: 4px solid #3b82f6; }
 
-/* ---------- badges ---------- */
 .badge-critical { background:#ef44441a; color:#ef4444; font-size:10px; padding:2px 8px; border-radius:4px; font-weight:700; letter-spacing:0.05em; }
 .badge-warning  { background:#f59e0b1a; color:#f59e0b; font-size:10px; padding:2px 8px; border-radius:4px; font-weight:700; letter-spacing:0.05em; }
 .badge-ok       { background:#10b9811a; color:#10b981; font-size:10px; padding:2px 8px; border-radius:4px; font-weight:700; letter-spacing:0.05em; }
 .badge-info     { background:#3b82f61a; color:#3b82f6; font-size:10px; padding:2px 8px; border-radius:4px; font-weight:700; letter-spacing:0.05em; }
 
-/* ---------- stat strip ---------- */
 .stat-strip {
     display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px;
 }
@@ -126,7 +113,6 @@ html, body, [data-testid="stAppViewContainer"] {
 .stat-value { font-size: 17px; font-weight: 700; color: #f1f5f9; }
 .stat-sub   { font-size: 10px; color: #64748b; margin-top: 2px; }
 
-/* ---------- sidebar section headers ---------- */
 .sb-section {
     font-size: 10px; font-weight: 700; color: #3b82f6;
     text-transform: uppercase; letter-spacing: 0.12em;
@@ -134,16 +120,12 @@ html, body, [data-testid="stAppViewContainer"] {
     border-left: 3px solid #1e40af;
 }
 
-/* ---------- scrollbar ---------- */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
 </style>
 """, unsafe_allow_html=True)
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# DATA & MODEL LOADING
-# ═══════════════════════════════════════════════════════════════════════════════
 
 @st.cache_resource(show_spinner="Training XGBoost-style HGBR + GBM ensemble on 60k orders…")
 def load_and_train():
@@ -172,10 +154,6 @@ from config import (
 )
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# REAL KPI DEFAULTS (computed once from dataset)
-# ═══════════════════════════════════════════════════════════════════════════════
-
 @st.cache_data
 def get_real_kpis():
     df = df_raw.copy()
@@ -197,9 +175,6 @@ def get_real_kpis():
 REAL_KPIS = get_real_kpis()
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# HELPERS
-# ═══════════════════════════════════════════════════════════════════════════════
 
 def build_input(p: dict) -> pd.DataFrame:
     now = datetime.now()
@@ -334,10 +309,6 @@ def build_supplier_table(plant_name: str):
         })
     return pd.DataFrame(rows)
 
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# PLOT HELPERS
-# ═══════════════════════════════════════════════════════════════════════════════
 
 PB = dict(
     paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
@@ -516,14 +487,10 @@ def resilience_chart(scenarios):
     return fig
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# SIDEBAR
-# ═══════════════════════════════════════════════════════════════════════════════
-
 with st.sidebar:
     st.markdown("""
     <div style="text-align:center;padding:8px 0 4px 0;">
-      <div style="font-size:20px;font-weight:800;color:#f1f5f9;letter-spacing:0.02em;">🚚 SC Intelligence</div>
+      <div style="font-size:20px;font-weight:800;color:#f1f5f9;letter-spacing:0.02em;">SC Intelligence</div>
       <div style="font-size:10px;color:#475569;margin-top:2px;">ZF Group | AI Logistics Platform</div>
     </div>
     """, unsafe_allow_html=True)
@@ -586,9 +553,6 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# SESSION STATE — only update on button click
-# ═══════════════════════════════════════════════════════════════════════════════
 
 params = dict(
     lead_time           = lead_time,
@@ -629,7 +593,7 @@ st.markdown(f"""
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
   <div>
     <div style="font-size:22px;font-weight:800;color:#f1f5f9;letter-spacing:0.01em;">
-      🚚 Supply Chain Intelligence
+       Supply Chain Intelligence
     </div>
     <div style="font-size:12px;color:#475569;margin-top:2px;">
       AI-Enhanced Logistics Optimization &mdash; ZF Group &nbsp;|&nbsp; XGBoost-style HGBR + GBM Ensemble
@@ -643,10 +607,6 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 st.divider()
 
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# SECONDARY STATS BAR (smaller, under header — replaces old KPI strip)
-# ═══════════════════════════════════════════════════════════════════════════════
 
 k = R["kpis"]
 avg_d = sum(R["demand_forecast"]) / 7
@@ -689,9 +649,6 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# TABS
-# ═══════════════════════════════════════════════════════════════════════════════
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "📈 Forecast & Delay",
@@ -702,9 +659,6 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
 ])
 
 
-# ───────────────────────────────────────────────────────────────────────────────
-# TAB 1 — Forecast & Delay
-# ───────────────────────────────────────────────────────────────────────────────
 with tab1:
     cl, cr = st.columns([3, 2], gap="large")
 
@@ -775,9 +729,6 @@ with tab1:
         """, unsafe_allow_html=True)
 
 
-# ───────────────────────────────────────────────────────────────────────────────
-# TAB 2 — Inventory & Supplier
-# ───────────────────────────────────────────────────────────────────────────────
 with tab2:
     cl, cr = st.columns([1, 1], gap="large")
 
@@ -850,9 +801,7 @@ with tab2:
                         config={"displayModeBar": False})
 
 
-# ───────────────────────────────────────────────────────────────────────────────
-# TAB 3 — Routing & Network
-# ───────────────────────────────────────────────────────────────────────────────
+
 with tab3:
     cl, cr = st.columns([3, 2], gap="large")
 
@@ -947,9 +896,7 @@ with tab3:
         """, unsafe_allow_html=True)
 
 
-# ───────────────────────────────────────────────────────────────────────────────
-# TAB 4 — Resilience
-# ───────────────────────────────────────────────────────────────────────────────
+
 with tab4:
     st.markdown('<div class="section-title">Disruption Scenario Analysis</div>', unsafe_allow_html=True)
     st.plotly_chart(resilience_chart(R["scenarios"]), use_container_width=True,
@@ -1003,9 +950,6 @@ with tab4:
         """, unsafe_allow_html=True)
 
 
-# ───────────────────────────────────────────────────────────────────────────────
-# TAB 5 — Decision Engine
-# ───────────────────────────────────────────────────────────────────────────────
 with tab5:
     st.markdown('<div class="section-title">AI Prescriptive Recommendations</div>', unsafe_allow_html=True)
 

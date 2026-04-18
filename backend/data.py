@@ -16,7 +16,6 @@ def load_data() -> pd.DataFrame:
 def preprocess(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
-    # ── Rename common columns to standard names ────────────────────────────────
     rename = {
         "days_for_shipping_real":       "days_for_shipping_(real)",
         "days_for_shipment_scheduled":  "days_for_shipment_(scheduled)",
@@ -30,7 +29,6 @@ def preprocess(df: pd.DataFrame) -> pd.DataFrame:
     }
     df.rename(columns=rename, inplace=True)
 
-    # ── Parse dates ───────────────────────────────────────────────────────────
     for col in ["order_date_(dateorders)", "shipping_date_(dateorders)"]:
         if col in df.columns:
             df[col] = pd.to_datetime(df[col], errors="coerce")
@@ -44,7 +42,6 @@ def preprocess(df: pd.DataFrame) -> pd.DataFrame:
         df["order_month"] = 1
         df["order_hour"]  = 0
 
-    # ── Encode categoricals ───────────────────────────────────────────────────
     for col in ["shipping_mode", "customer_segment", "order_status",
                 "supplier_location", "traffic_condition", "disruption_type",
                 "vehicle_type", "market", "order_region", "type",
@@ -52,14 +49,12 @@ def preprocess(df: pd.DataFrame) -> pd.DataFrame:
         if col in df.columns:
             df[col] = df[col].astype("category").cat.codes
 
-    # ── Demand proxy if missing ───────────────────────────────────────────────
     if "demand" not in df.columns:
         if "sales" in df.columns:
             df["demand"] = df["sales"]
         else:
             df["demand"] = 100.0
 
-    # ── Lag / rolling features ────────────────────────────────────────────────
     if "demand" in df.columns:
         df = df.sort_values("order_day").reset_index(drop=True)
         df["lag_1"]          = df["demand"].shift(1).fillna(df["demand"].median())
@@ -68,11 +63,9 @@ def preprocess(df: pd.DataFrame) -> pd.DataFrame:
         df["lag_1"]          = 200
         df["rolling_mean_3"] = 200
 
-    # ── Fill numerics ─────────────────────────────────────────────────────────
     num_cols = df.select_dtypes(include=[np.number]).columns
     df[num_cols] = df[num_cols].fillna(df[num_cols].median())
 
-    # ── Ensure late_delivery_risk is int ─────────────────────────────────────
     if "late_delivery_risk" in df.columns:
         df["late_delivery_risk"] = df["late_delivery_risk"].astype(int)
 

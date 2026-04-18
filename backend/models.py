@@ -22,7 +22,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.pipeline import Pipeline
 
-# ── Feature lists ──────────────────────────────────────────────────────────────
 
 DEMAND_FEATURES = [
     "order_day", "order_month", "order_hour",

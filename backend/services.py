@@ -7,7 +7,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import SUPPLIER_COORDS, PLANT_COORDS, SPEED_KMH, CO2_BASE
 
 
-# ── Geo ────────────────────────────────────────────────────────────────────────
 
 def haversine(lat1, lon1, lat2, lon2) -> float:
     R = 6371
@@ -17,8 +16,6 @@ def haversine(lat1, lon1, lat2, lon2) -> float:
     a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlam / 2) ** 2
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
-
-# ── Inventory ──────────────────────────────────────────────────────────────────
 
 def reorder_point(demand_forecast: list, lead_time: float, safety_stock: float) -> float:
     avg = sum(demand_forecast) / len(demand_forecast)
@@ -36,13 +33,10 @@ def inventory_status(current: float, reorder: float) -> str:
         return "CRITICAL"
 
 
-# ── Supplier optimisation ──────────────────────────────────────────────────────
-
 def select_best_supplier(df: pd.DataFrame, mode: str = "Cost Efficient") -> dict:
     if "supplier_location" not in df.columns:
         return _fallback_supplier()
 
-    # ── Ensure required columns exist (fallback defaults) ──
     df = df.copy()
 
     if "distance_km" not in df.columns:
@@ -57,7 +51,7 @@ def select_best_supplier(df: pd.DataFrame, mode: str = "Cost Efficient") -> dict
     if "supplier_reliability_score" not in df.columns:
         df["supplier_reliability_score"] = 0.8  # default reliability
 
-    # ── Grouping ──
+
     grp = df.groupby("supplier_location").agg(
         avg_distance=("distance_km", "mean"),
         avg_co2=("co2_per_km", "mean"),
@@ -67,7 +61,6 @@ def select_best_supplier(df: pd.DataFrame, mode: str = "Cost Efficient") -> dict
 
     supplier_names = {0: "Chennai", 1: "Mumbai", 2: "Delhi"}
 
-    # ── Selection logic ──
     if mode == "Fast Delivery":
         best_row = grp.loc[grp["avg_distance"].idxmin()]
     elif mode == "Eco Friendly":
@@ -75,13 +68,13 @@ def select_best_supplier(df: pd.DataFrame, mode: str = "Cost Efficient") -> dict
     else:
         best_row = grp.loc[grp["avg_cost"].idxmin()]
 
-    # ── Map supplier code → name ──
+
     loc_code = int(best_row["supplier_location"])
     loc_name = supplier_names.get(loc_code, "Chennai")
 
     lat, lon = SUPPLIER_COORDS.get(loc_name, SUPPLIER_COORDS["Chennai"])
 
-    # ── Recalculate real distance using haversine ──
+ 
     dist = haversine(lat, lon, PLANT_COORDS[0], PLANT_COORDS[1])
 
     return {
@@ -105,8 +98,6 @@ def _fallback_supplier():
     }
 
 
-# ── Routing ────────────────────────────────────────────────────────────────────
-
 def route_info(supplier: dict) -> dict:
     dist = supplier.get("distance_km", 350.0)
     return {
@@ -117,7 +108,6 @@ def route_info(supplier: dict) -> dict:
     }
 
 
-# ── Sustainability ─────────────────────────────────────────────────────────────
 
 def calculate_emission(distance_km: float, co2_per_km: float) -> float:
     return round(distance_km * co2_per_km, 2)
@@ -127,7 +117,6 @@ def sustainability_score(emission: float, max_emission: float = 500.0) -> int:
     return max(0, 100 - int((emission / max_emission) * 100))
 
 
-# ── Traffic ────────────────────────────────────────────────────────────────────
 
 def detect_spike(df: pd.DataFrame) -> dict:
     if "traffic_condition" not in df.columns:
@@ -144,7 +133,6 @@ def detect_spike(df: pd.DataFrame) -> dict:
     return {"level": level, "high_pct": round(high_pct, 1)}
 
 
-# ── Weather (mock) ─────────────────────────────────────────────────────────────
 
 def get_weather_risk(location: str = "Chennai") -> dict:
     risks = {
@@ -157,7 +145,6 @@ def get_weather_risk(location: str = "Chennai") -> dict:
     return data
 
 
-# ── Decision engine ────────────────────────────────────────────────────────────
 
 def make_decision(demand_forecast: list, delay_prob: float,
                   inventory: float, reorder: float, mode: str = "Cost Efficient") -> list:
@@ -195,7 +182,6 @@ def make_decision(demand_forecast: list, delay_prob: float,
     return decisions
 
 
-# ── Resilience playbooks ───────────────────────────────────────────────────────
 
 PLAYBOOKS = {
     "Strike":     {
@@ -216,17 +202,14 @@ PLAYBOOKS = {
 def resilience_scenarios(df: pd.DataFrame) -> list:
     scenarios = []
 
-    # ── Create safe copy ──
     df = df.copy()
 
-    # ── Fix missing columns ──
     if "days_for_shipping_(real)" not in df.columns:
-        df["days_for_shipping_(real)"] = 4.0  # default delay
+        df["days_for_shipping_(real)"] = 4.0  
 
     if "disruption_type" not in df.columns:
-        df["disruption_type"] = 0  # default category
+        df["disruption_type"] = 0  
 
-    # Mapping (encoded values)
     code_map = {
         "Port Delay": 0,
         "Strike": 1,
@@ -237,13 +220,11 @@ def resilience_scenarios(df: pd.DataFrame) -> list:
 
         code = code_map.get(disruption, -1)
 
-        # ── Filter subset safely ──
         if code >= 0:
             subset = df[df["disruption_type"] == code]
         else:
             subset = df
 
-        # ── Safe delay calculation ──
         if len(subset) > 0:
             avg_delay = subset["days_for_shipping_(real)"].mean()
         else:
@@ -258,8 +239,6 @@ def resilience_scenarios(df: pd.DataFrame) -> list:
 
     return scenarios
 
-
-# ── KPI summary ────────────────────────────────────────────────────────────────
 
 def kpi_summary(df: pd.DataFrame) -> dict:
     total = len(df)
